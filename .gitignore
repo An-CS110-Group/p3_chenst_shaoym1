@@ -1,6 +1,6 @@
-logisim-evolution.jar
-venus-jvm-latest.jar
-
+gbfloat_base
+gbfloat_fast
+test_accuracy
 
 ### VisualStudioCode template
 .vscode/*

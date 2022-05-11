@@ -209,7 +209,8 @@ int main(int argc, char** argv)
     sscanf(argv[7], "%u", &min_dim);  /* 201 */
 
     FVec v = make_gv(a, x0, x1, dim, min_dim);
-    // print_fvec(v);
+
+//    print_fvec(v);
     Image img;
     img.data = stbi_loadf(argv[1], &(img.dimX), &(img.dimY), &(img.numChannels), 0);
 
