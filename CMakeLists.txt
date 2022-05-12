@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
 project(Project3)
-set(CMAKE_CXX_FLAGS "-O2 -fopenmp -pthread")
+set(CMAKE_C_FLAGS "-O2 -fopenmp -pthread")
 
 link_libraries(m)
 

@@ -1,6 +1,9 @@
 gbfloat_base
 gbfloat_fast
 test_accuracy
+test_base.jpg
+test_fast.jpg
+.clang-format
 
 ### VisualStudioCode template
 .vscode/*
