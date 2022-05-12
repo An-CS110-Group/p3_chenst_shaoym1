@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -fopenmp -pthread
+CFLAGS = -O2 -fopenmp -pthread -march=native
 LIBS = -lm
 all : base_test fast_test check_test
 
