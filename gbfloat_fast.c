@@ -110,35 +110,44 @@ Image gb_h(Image a, FVec gv) {
                 __m256 simdSum = _mm256_setzero_ps();
                 __m256 cur1, dat1;
                 __m256 constant = _mm256_set1_ps(gv.sum[ext - deta]);
+                constant = _mm256_add_ps(constant, simdSum);
 
 
                 for (i = deta; i < gv.length - deta - 8; i += 8) {
-                    float temp[8] = {(float) get_pixel(a, x - ext + i, y)[channel],     (float) get_pixel(a, x - ext + i + 1, y)[channel],
-                                     (float) get_pixel(a, x - ext + i + 2, y)[channel], (float) get_pixel(a, x - ext + i + 3, y)[channel],
-                                     (float) get_pixel(a, x - ext + i + 4, y)[channel], (float) get_pixel(a, x - ext + i + 5, y)[channel],
-                                     (float) get_pixel(a, x - ext + i + 6, y)[channel], (float) get_pixel(a, x - ext + i + 7, y)[channel]};
-                    cur1 = _mm256_load_ps(temp);
-                    dat1 = _mm256_load_ps(&gv.data[i]);
-                    cur1 = _mm256_mul_ps(cur1, dat1);
-                    cur1 = _mm256_div_ps(cur1, constant);
-                    simdSum = _mm256_add_ps(simdSum, cur1);
-                    //                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
-                    //                    ++i;
-                    //                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
-                    //                    ++i;
-                    //                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
-                    //                    ++i;
-                    //                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
-                    //                    ++i;
-                }
-
-                float temp[8];
-                _mm256_store_ps(temp, simdSum);
-                sum = temp[0] + temp[1] + temp[2] + temp[3] + temp[4] + temp[5] + temp[6] + temp[7];
-                for (int j = i; j < gv.length - deta; ++j) {
-                    sum += gv.data[j] / gv.sum[ext - deta] * (float) get_pixel(a, x - ext + j, y)[channel];
+                    //                    float temp[8] = {(float) get_pixel(a, x - ext + i, y)[channel],     (float) get_pixel(a, x - ext + i + 1, y)[channel],
+                    //                                     (float) get_pixel(a, x - ext + i + 2, y)[channel], (float) get_pixel(a, x - ext + i + 3, y)[channel],
+                    //                                     (float) get_pixel(a, x - ext + i + 4, y)[channel], (float) get_pixel(a, x - ext + i + 5, y)[channel],
+                    //                                     (float) get_pixel(a, x - ext + i + 6, y)[channel], (float) get_pixel(a, x - ext + i + 7, y)[channel]};
+                    //                    cur1 = _mm256_load_ps(temp);
+                    //                    dat1 = _mm256_load_ps(&gv.data[i]);
+                    //                    cur1 = _mm256_mul_ps(cur1, dat1);
+                    //                    cur1 = _mm256_div_ps(cur1, constant);
+                    //                    simdSum = _mm256_add_ps(simdSum, cur1);
+                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
+                    ++i;
+                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
+                    ++i;
+                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
+                    ++i;
+                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
+                    ++i;
+                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
+                    ++i;
+                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
+                    ++i;
+                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
+                    ++i;
+                    sum += gv.data[i] * (float) get_pixel(a, x - ext + i, y)[channel] / gv.sum[ext - deta];
                     ++i;
                 }
+
+//                float temp[8];
+//                _mm256_store_ps(temp, simdSum);
+//                sum = temp[0] + temp[1] + temp[2] + temp[3] + temp[4] + temp[5] + temp[6] + temp[7];
+//                for (int j = i; j < gv.length - deta; ++j) {
+//                    sum += gv.data[j] / gv.sum[ext - deta] * (float) get_pixel(a, x - ext + j, y)[channel];
+//                    ++i;
+//                }
                 pc[channel] = (float) sum;
             }
         }
