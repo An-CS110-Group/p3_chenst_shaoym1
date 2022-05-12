@@ -235,3 +235,25 @@ int main(int argc, char **argv) {
     free(v.sum);
     return 0;
 }
+
+
+
+/*.......................Some notes.........................................*/
+
+
+
+// __m128i _mm_set1_epi32(int i):
+// Set the four signed 32-bit integers within the vector to i.
+//  __m128i _mm_loadu_si128( __m128i *p):
+// Load the 4 successive ints pointed to by p into a 128-bit vector.
+//  __m128i _mm_mullo_epi32(__m128i a, __m128i b):
+// Return vector (a0 · b0, a1 · b1, a2 · b2, a3 · b3).
+// __m128i _mm_add_epi32(__m128i a, __m128i b):
+// Return vector (a0 + b0, a1 + b1, a2 + b2, a3 + b3)
+//  void _mm_storeu_si128( __m128i *p, __m128i a):
+// Store 128-bit vector a at pointer p.
+// __m128i _mm_and_si128(__m128i a, __m128i b):
+// Perform a bitwise AND of 128 bits in a and b, and return the result.
+//  __m128i _mm_cmpeq_epi32(__m128i a, __m128i b):
+// The ith element of the return vector will be set to 0xFFFFFFFF if the ith
+// elements of a and b are equal, otherwise it’ll be set to 0.
