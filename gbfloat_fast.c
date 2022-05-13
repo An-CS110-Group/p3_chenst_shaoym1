@@ -206,4 +206,4 @@ int main(int argc, char **argv) {
 // The ith element of the return vector will be set to 0xFFFFFFFF if the ith
 // elements of a and b are equal, otherwise it’ll be set to 0.
 
-//
+//begin to try something
