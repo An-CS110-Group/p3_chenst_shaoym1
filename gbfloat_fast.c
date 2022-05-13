@@ -103,14 +103,15 @@ Image gb_h(Image a, FVec gv) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
             deta = fmin(fmin(fmin(a.dimY - y - 1, y), fmin(a.dimX - x - 1, x)), gv.min_deta);
+            double sum1 = 0, sum2 = 0, sum3 = 0;
             for (i = deta; i < gv.length - deta; ++i) {
-                pc[0] += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
-                pc[1] += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
-                pc[2] += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
+                sum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
+                sum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
+                sum3 += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
             }
-            pc[0] /= gv.sum[ext - deta];
-            pc[1] /= gv.sum[ext - deta];
-            pc[2] /= gv.sum[ext - deta];
+            pc[0] = (float) sum1 / gv.sum[ext - deta];
+            pc[1] = (float) sum2 / gv.sum[ext - deta];
+            pc[2] = (float) sum3 / gv.sum[ext - deta];
         }
     }
     return b;
@@ -129,14 +130,15 @@ Image gb_v(Image a, FVec gv) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
             deta = fmin(fmin(fmin(a.dimY - y - 1, y), fmin(a.dimX - x - 1, x)), gv.min_deta);
+            double sum1 = 0, sum2 = 0, sum3 = 0;
             for (i = deta; i < gv.length - deta; ++i) {
-                pc[0] += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
-                pc[1] += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
-                pc[2] += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
+                sum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
+                sum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
+                sum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
             }
-            pc[0] /= gv.sum[ext - deta];
-            pc[1] /= gv.sum[ext - deta];
-            pc[2] /= gv.sum[ext - deta];
+            pc[0] = (float) sum1 / gv.sum[ext - deta];
+            pc[1] = (float) sum2 / gv.sum[ext - deta];
+            pc[2] = (float) sum3 / gv.sum[ext - deta];
         }
     }
     return b;
