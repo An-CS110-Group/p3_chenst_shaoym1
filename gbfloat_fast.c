@@ -103,7 +103,7 @@ Image gb_h(Image a, FVec gv) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
             deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
-            float sum1 = 0, sum2 = 0, sum3 = 0;
+            double sum1 = 0, sum2 = 0, sum3 = 0;
             for (i = deta; i < gv.length - deta; ++i) {
                 sum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
                 sum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
@@ -130,7 +130,7 @@ Image gb_v(Image a, FVec gv) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
             deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
-            float sum1 = 0, sum2 = 0, sum3 = 0;
+            double sum1 = 0, sum2 = 0, sum3 = 0;
             for (i = deta; i < gv.length - deta; ++i) {
                 sum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
                 sum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
 // The ith element of the return vector will be set to 0xFFFFFFFF if the ith
 // elements of a and b are equal, otherwise it’ll be set to 0.
 
-//begin to try something
+//
 
 //can l change all double to float
-//do some minus optimization (change all exp to exp and fmin to fminf)
+//do some minus optimization (change all exp to expf and fmin to fminf)
