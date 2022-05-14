@@ -225,3 +225,11 @@ int main(int argc, char **argv) {
 // a[i] = a[i] + b[i];
 // }
 // }
+
+//dynamic is very useful instead of choosing static #pragma omp parallel for schedule(dynamic)
+//because the time of each iteration is inbalancing
+//but whether we can use static//pragma omp parallel for schedule(static)//since each iteration is not such inbalancing
+//Dynamic scheduling has some overhead, but can result in better load balancing if iterations not all equal sized.
+
+
+
