@@ -55,7 +55,7 @@ float *get_pixel(Image img, int x, int y) {
 
 float gd(float a, float b, float x) {
     float c = (x - b) / a;
-    return exp((-.5) * c * c) / (a * sqrt(2 * PI));
+    return expf((-.5) * c * c) / (a * sqrt(2 * PI));
 }
 
 FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_length) {
@@ -102,7 +102,7 @@ Image gb_h(Image a, FVec gv) {
     for (y = 0; y < a.dimY; y++) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
-            deta = fmin(fmin(fmin(a.dimY - y - 1, y), fmin(a.dimX - x - 1, x)), gv.min_deta);
+            deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
             double sum1 = 0, sum2 = 0, sum3 = 0;
             for (i = deta; i < gv.length - deta; ++i) {
                 sum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
@@ -129,7 +129,7 @@ Image gb_v(Image a, FVec gv) {
     for (y = 0; y < a.dimY; y++) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
-            deta = fmin(fmin(fmin(a.dimY - y - 1, y), fmin(a.dimX - x - 1, x)), gv.min_deta);
+            deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
             double sum1 = 0, sum2 = 0, sum3 = 0;
             for (i = deta; i < gv.length - deta; ++i) {
                 sum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
@@ -207,3 +207,6 @@ int main(int argc, char **argv) {
 // elements of a and b are equal, otherwise it’ll be set to 0.
 
 //begin to try something
+
+//can l change all doubles to float
+//do some minus optimization (change all exp to expf and fmin to fminf)
