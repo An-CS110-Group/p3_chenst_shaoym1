@@ -232,4 +232,16 @@ int main(int argc, char **argv) {
 //Dynamic scheduling has some overhead, but can result in better load balancing if iterations not all equal sized.
 
 
+// OpenMP has a shared memory programming model.
+// Some variables are shared and accessible by all threads.
+// Other threads are private, and each thread has its own copy.
+// Most variables are shared by default.
+// Global and static variables are shared.
+// Variables declared in master thread shared by default.
+// Some variables parallel blocks private by default.
+// Loop index of for / parallel for construct.
+// Stack variables (e.g. function argument or local variable) created during execution of a parallel region.
+// Automatic variables in functions called in parallel region.
 
+//can we use #pragma omp parallel for reduction(+:global_sum)
+//
