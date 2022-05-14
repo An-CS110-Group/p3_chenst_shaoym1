@@ -103,7 +103,7 @@ Image gb_h(Image a, FVec gv) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
             deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
-            double sum1 = 0, sum2 = 0, sum3 = 0;
+            float sum1 = 0, sum2 = 0, sum3 = 0;
             for (i = deta; i < gv.length - deta; ++i) {
                 sum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
                 sum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
@@ -130,7 +130,7 @@ Image gb_v(Image a, FVec gv) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
             deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
-            double sum1 = 0, sum2 = 0, sum3 = 0;
+            float sum1 = 0, sum2 = 0, sum3 = 0;
             for (i = deta; i < gv.length - deta; ++i) {
                 sum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
                 sum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
@@ -208,5 +208,20 @@ int main(int argc, char **argv) {
 
 //
 
-//can l change all double to float
+//can l change all float to float
 //do some minus optimization (change all exp to expf and fmin to fminf)
+//“Pragma”: stands for “pragmatic information.
+//A pragma is a way to communicate the information to the compiler. 
+
+/*can we parallel manually instesd of using #pragma omp parallel for schedule(dynamic) default(none) private(y) shared(a, x, b, pc, gv, ext, deta, i)*/
+//somethinglike
+// #pragma omp parallel {
+// int id, i, Nthreads, start, end;
+// id = omp_get_thread_num();
+// Nthreads = omp_get_num_threads();
+// start = id * N / Nthreads;
+// end = (id + 1) * N / Nthreads;
+// for (i = start; i < end; i++) {
+// a[i] = a[i] + b[i];
+// }
+// }
