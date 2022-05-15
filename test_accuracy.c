@@ -37,17 +37,20 @@ int main(int argc, char** argv)
 
     if(Srcimg.dimX != Desimg.dimX || Srcimg.dimY != Desimg.dimY || Srcimg.numChannels!= Desimg.numChannels){
         printf("img size not fit !\n");
-        exit(0);
+        exit(-1);
     }
 
     // printf("stbi_loadf ： dimx = %d, dimy = %d, channel = %d \n",img.dimX,img.dimY,img.numChannels);
     // unsigned char * ans = malloc(imgOut.dimX * imgOut.dimY * imgOut.numChannels * sizeof(char));
-    double delta = 0.0;
+    double delta = 0.0, threshold = 1e-4, avg_delta;
     for (int y = 0; y < Desimg.dimX* Desimg.dimY * Desimg.numChannels; y++)
     {
-
-        delta += fabs(Desimg.data[y] - Srcimg.data[y]);
+        delta += (fabs(Desimg.data[y] - Srcimg.data[y]) > 1) ? fabs(Desimg.data[y] - Srcimg.data[y]) : 0;
     }
-    printf("the deltas : %lf\n",delta);
-
+    avg_delta = delta / (Desimg.dimX* Desimg.dimY * Desimg.numChannels);
+    printf("%lf\n", avg_delta);
+    if (avg_delta < threshold)
+        return 0;
+    else
+        return -1;
 }

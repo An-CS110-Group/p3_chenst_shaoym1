@@ -5,7 +5,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <immintrin.h>
-//implement dynamic
+//inplement dymanic
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -14,7 +14,6 @@
 #include "stb_image_write.h"
 
 #define PI 3.14159
-
 
 typedef struct FVec
 {
@@ -124,7 +123,7 @@ Image gb_h(Image a, FVec gv)
     int offset;
     unsigned int x, y, channel;
     float *pc;
-    double sum;
+    float sum;
     int i;
     for (channel = 0; channel < a.numChannels; channel++)
     {
@@ -141,7 +140,7 @@ Image gb_h(Image a, FVec gv)
                     offset = i - ext;
                     sum += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[channel];
                 }
-                pc[channel] = (float)sum;
+                pc[channel] = sum;
             }
         }
     }
@@ -157,7 +156,7 @@ Image gb_v(Image a, FVec gv)
     int offset;
     unsigned int x, y, channel;
     float* pc;
-    double sum;
+    float sum;
     int i;
     for (channel = 0; channel < a.numChannels; channel++)
     {
@@ -174,7 +173,7 @@ Image gb_v(Image a, FVec gv)
                     offset = i - ext;
                     sum += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[channel];
                 }
-                pc[channel] = (float)sum;
+                pc[channel] = sum;
             }
         }
     }
@@ -191,7 +190,7 @@ Image apply_gb(Image a, FVec gv)
 
 int main(int argc, char** argv)
 {
-    struct timeval start_time, stop_time, elapsed_time; 
+    struct timeval start_time, stop_time, elapsed_time;
     gettimeofday(&start_time,NULL);
     if (argc < 6)
     {
@@ -216,7 +215,7 @@ int main(int argc, char** argv)
     Image imgOut = apply_gb(img, v);
     stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
     gettimeofday(&stop_time,NULL);
-    timersub(&stop_time, &start_time, &elapsed_time); 
+    timersub(&stop_time, &start_time, &elapsed_time);
     printf("%f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
     free(imgOut.data);
     free(v.data);

@@ -109,9 +109,9 @@ Image gb_h(Image a, FVec gv) {
                 sum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
                 sum3 += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
             }
-            pc[0] = (float) sum1 / gv.sum[ext - deta];
-            pc[1] = (float) sum2 / gv.sum[ext - deta];
-            pc[2] = (float) sum3 / gv.sum[ext - deta];
+            pc[0] = sum1 / gv.sum[ext - deta];
+            pc[1] = sum2 / gv.sum[ext - deta];
+            pc[2] = sum3 / gv.sum[ext - deta];
         }
     }
     return b;
@@ -136,9 +136,9 @@ Image gb_v(Image a, FVec gv) {
                 sum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
                 sum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
             }
-            pc[0] = (float) sum1 / gv.sum[ext - deta];
-            pc[1] = (float) sum2 / gv.sum[ext - deta];
-            pc[2] = (float) sum3 / gv.sum[ext - deta];
+            pc[0] = sum1 / gv.sum[ext - deta];
+            pc[1] = sum2 / gv.sum[ext - deta];
+            pc[2] = sum3 / gv.sum[ext - deta];
         }
     }
     return b;
