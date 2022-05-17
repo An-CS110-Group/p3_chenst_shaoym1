@@ -69,10 +69,10 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     } else {
         v.min_deta = ((v.length - v.min_length) / 2);
     }
-    v.data = malloc(length * sizeof(float));
-    //    v.data = aligned_alloc(1024, allocSize(length * sizeof(float)));
-    v.sum = malloc((length / 2 + 1) * sizeof(float));
-    //    v.sum = aligned_alloc(1024, allocSize((length / 2 + 1) * sizeof(float)));
+    v.data = malloc(length * sizeof(float) + sizeof(float));
+    //    v.data = aligned_alloc(1024, allocSize(length * sizeof(float) + sizeof(float)));
+    v.sum = malloc((length / 2 + 1) * sizeof(float) + sizeof(float));
+    //    v.sum = aligned_alloc(1024, allocSize((length / 2 + 1) * sizeof(float) + sizeof(float)));
     float step = (x1 - x0) / ((float) length);
     int offset = length / 2;
 
@@ -90,8 +90,8 @@ void print_fvec(FVec v) {
 
 Image img_sc(Image a) {
     Image b = a;
-    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float));
-    //    b.data = aligned_alloc(1024, b.dimX * b.dimY * b.numChannels * sizeof(float));
+    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float) + sizeof(float));
+//    b.data = aligned_alloc(1024, b.dimX * b.dimY * b.numChannels * sizeof(float) + sizeof(float));
     return b;
 }
 
@@ -110,8 +110,12 @@ Image gb_h(Image a, FVec gv) {
             __m128 sum1 = _mm_setzero_ps();
             __m128 sum2 = _mm_setzero_ps();
             __m128 sum3 = _mm_setzero_ps();
+            __m128 sum4 = _mm_setzero_ps();
+            __m128 sum5 = _mm_setzero_ps();
+            __m128 sum6 = _mm_setzero_ps();
+            __m128 sum7 = _mm_setzero_ps();
             int i;
-            for (i = deta; i < gv.length - deta - 4; i += 4) {
+            for (i = deta; i < gv.length - deta - 8; i += 8) {
                 //                pixel0 = _mm_loadu_ps(get_pixel(a, x - ext + i, y));
                 //                pixel1 = _mm_loadu_ps(get_pixel(a, x - ext + i + 1, y));
                 //                pixel2 = _mm_loadu_ps(get_pixel(a, x - ext + i + 2, y));
@@ -131,6 +135,10 @@ Image gb_h(Image a, FVec gv) {
                 sum1 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 1, y)), _mm_load1_ps(&gv.data[i + 1]), sum1);
                 sum2 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 2, y)), _mm_load1_ps(&gv.data[i + 2]), sum2);
                 sum3 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 3, y)), _mm_load1_ps(&gv.data[i + 3]), sum3);
+                sum4 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 4, y)), _mm_load1_ps(&gv.data[i + 4]), sum4);
+                sum5 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 5, y)), _mm_load1_ps(&gv.data[i + 5]), sum5);
+                sum6 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 6, y)), _mm_load1_ps(&gv.data[i + 6]), sum6);
+                sum7 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 7, y)), _mm_load1_ps(&gv.data[i + 7]), sum7);
             }
 
             for (; i < gv.length - deta; ++i) {
@@ -138,9 +146,9 @@ Image gb_h(Image a, FVec gv) {
                 fsum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
                 fsum3 += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
             }
-            get_pixel(b, x, y)[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + fsum1) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + fsum2) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + fsum3) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + sum4[0] + sum5[0] + sum6[0] + sum7[0] + fsum1) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + sum4[1] + sum5[1] + sum6[1] + sum7[1] + fsum2) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + sum4[2] + sum5[2] + sum6[2] + sum7[2] + fsum3) / gv.sum[ext - deta];
         }
     }
     return b;
@@ -161,8 +169,12 @@ Image gb_v(Image a, FVec gv) {
             __m128 sum1 = _mm_setzero_ps();
             __m128 sum2 = _mm_setzero_ps();
             __m128 sum3 = _mm_setzero_ps();
+            __m128 sum4 = _mm_setzero_ps();
+            __m128 sum5 = _mm_setzero_ps();
+            __m128 sum6 = _mm_setzero_ps();
+            __m128 sum7 = _mm_setzero_ps();
             int i;
-            for (i = deta; i < gv.length - deta - 4; i += 4) {
+            for (i = deta; i < gv.length - deta - 8; i += 8) {
                 //                pixel0 = _mm_loadu_ps(get_pixel(a, x, y - ext + i));
                 //                pixel1 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 1));
                 //                pixel2 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 2));
@@ -182,6 +194,10 @@ Image gb_v(Image a, FVec gv) {
                 sum1 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 1)), _mm_load1_ps(&gv.data[i + 1]), sum1);
                 sum2 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 2)), _mm_load1_ps(&gv.data[i + 2]), sum2);
                 sum3 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 3)), _mm_load1_ps(&gv.data[i + 3]), sum3);
+                sum4 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 4)), _mm_load1_ps(&gv.data[i + 4]), sum4);
+                sum5 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 5)), _mm_load1_ps(&gv.data[i + 5]), sum5);
+                sum6 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 6)), _mm_load1_ps(&gv.data[i + 6]), sum6);
+                sum7 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 7)), _mm_load1_ps(&gv.data[i + 7]), sum7);
             }
 
             for (; i < gv.length - deta; ++i) {
@@ -189,9 +205,9 @@ Image gb_v(Image a, FVec gv) {
                 fsum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
                 fsum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
             }
-            get_pixel(b, x, y)[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + fsum1) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + fsum2) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + fsum3) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + sum4[0] + sum5[0] + sum6[0] + sum7[0] + fsum1) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + sum4[1] + sum5[1] + sum6[1] + sum7[1] + fsum2) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + sum4[2] + sum5[2] + sum6[2] + sum7[2] + fsum3) / gv.sum[ext - deta];
         }
     }
     return b;
