@@ -58,8 +58,6 @@ float gd(float a, float b, float x) {
     return expf((-.5f) * c * c) / (a * sqrt(2 * PI));
 }
 
-size_t allocSize(int a) { return 1 << (32 - __builtin_clz(a)); }
-
 FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_length) {
     FVec v;
     v.length = length;
@@ -70,9 +68,7 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
         v.min_deta = ((v.length - v.min_length) / 2);
     }
     v.data = malloc(length * sizeof(float) + sizeof(float));
-    //    v.data = aligned_alloc(1024, allocSize(length * sizeof(float) + sizeof(float)));
     v.sum = malloc((length / 2 + 1) * sizeof(float) + sizeof(float));
-    //    v.sum = aligned_alloc(1024, allocSize((length / 2 + 1) * sizeof(float) + sizeof(float)));
     float step = (x1 - x0) / ((float) length);
     int offset = length / 2;
 
@@ -91,7 +87,6 @@ void print_fvec(FVec v) {
 Image img_sc(Image a) {
     Image b = a;
     b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float) + sizeof(float));
-//    b.data = aligned_alloc(1024, b.dimX * b.dimY * b.numChannels * sizeof(float) + sizeof(float));
     return b;
 }
 
@@ -163,51 +158,15 @@ Image gb_v(Image a, FVec gv) {
         for (int x = 0; x < a.dimX; x++) {
             int deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
             float fsum1 = 0, fsum2 = 0, fsum3 = 0;
-            __m128 pixel0, pixel1, pixel2, pixel3;
-            __m128 gvData0, gvData1, gvData2, gvData3;
-            __m128 sum0 = _mm_setzero_ps();
-            __m128 sum1 = _mm_setzero_ps();
-            __m128 sum2 = _mm_setzero_ps();
-            __m128 sum3 = _mm_setzero_ps();
-            __m128 sum4 = _mm_setzero_ps();
-            __m128 sum5 = _mm_setzero_ps();
-            __m128 sum6 = _mm_setzero_ps();
-            __m128 sum7 = _mm_setzero_ps();
             int i;
-            for (i = deta; i < gv.length - deta - 8; i += 8) {
-                //                pixel0 = _mm_loadu_ps(get_pixel(a, x, y - ext + i));
-                //                pixel1 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 1));
-                //                pixel2 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 2));
-                //                pixel3 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 3));
-
-                //                gvData0 = _mm_load1_ps(&gv.data[i]);
-                //                gvData1 = _mm_load1_ps(&gv.data[i + 1]);
-                //                gvData2 = _mm_load1_ps(&gv.data[i + 2]);
-                //                gvData3 = _mm_load1_ps(&gv.data[i + 3]);
-                //
-                //                sum0 = _mm_fmadd_ps(pixel0, gvData0, sum0);
-                //                sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
-                //                sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
-                //                sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
-
-                sum0 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i)), _mm_load1_ps(&gv.data[i]), sum0);
-                sum1 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 1)), _mm_load1_ps(&gv.data[i + 1]), sum1);
-                sum2 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 2)), _mm_load1_ps(&gv.data[i + 2]), sum2);
-                sum3 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 3)), _mm_load1_ps(&gv.data[i + 3]), sum3);
-                sum4 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 4)), _mm_load1_ps(&gv.data[i + 4]), sum4);
-                sum5 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 5)), _mm_load1_ps(&gv.data[i + 5]), sum5);
-                sum6 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 6)), _mm_load1_ps(&gv.data[i + 6]), sum6);
-                sum7 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 7)), _mm_load1_ps(&gv.data[i + 7]), sum7);
-            }
-
-            for (; i < gv.length - deta; ++i) {
+            for (i = deta; i < gv.length - deta; ++i) {
                 fsum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
                 fsum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
                 fsum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
             }
-            get_pixel(b, x, y)[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + sum4[0] + sum5[0] + sum6[0] + sum7[0] + fsum1) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + sum4[1] + sum5[1] + sum6[1] + sum7[1] + fsum2) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + sum4[2] + sum5[2] + sum6[2] + sum7[2] + fsum3) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[0] = (fsum1) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[1] = (fsum2) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[2] = (fsum3) / gv.sum[ext - deta];
         }
     }
     return b;
@@ -314,3 +273,11 @@ int main(int argc, char **argv) {
 
 //can we use #pragma omp parallel for reduction(+:global_sum)
 //
+
+// Reply to @sirius: All above are carefully tested, some of which helps a lot!
+//
+// FIXME: gb_v is SUPER slow! Much slower than expected due to cache miss issues.
+//
+// TODO: transpose matrix in gb_v
+// TODO: change sequence of loop in gb_v
+// TODO: try __mm256, it shall be fast on Autolab.
