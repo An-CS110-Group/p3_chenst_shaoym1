@@ -55,8 +55,10 @@ float *get_pixel(Image img, int x, int y) {
 
 float gd(float a, float b, float x) {
     float c = (x - b) / a;
-    return expf((-.5) * c * c) / (a * sqrt(2 * PI));
+    return expf((-.5f) * c * c) / (a * sqrt(2 * PI));
 }
+
+inline size_t allocSize(int a) { return 1 << (32 - __builtin_clz(a)); }
 
 FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_length) {
     FVec v;
@@ -67,8 +69,10 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     } else {
         v.min_deta = ((v.length - v.min_length) / 2);
     }
-    v.data = malloc(length * sizeof(float));
-    v.sum = malloc((length / 2 + 1) * sizeof(float));
+//    v.data = malloc(length * sizeof(float));
+    v.data = aligned_alloc(1024, allocSize(length * sizeof(float)));
+//    v.sum = malloc((length / 2 + 1) * sizeof(float));
+    v.sum = aligned_alloc(1024, allocSize((length / 2 + 1) * sizeof(float)));
     float step = (x1 - x0) / ((float) length);
     int offset = length / 2;
 
@@ -86,7 +90,8 @@ void print_fvec(FVec v) {
 
 Image img_sc(Image a) {
     Image b = a;
-    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float));
+//    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float));
+    b.data = aligned_alloc(1024, b.dimX * b.dimY * b.numChannels * sizeof(float));
     return b;
 }
 
@@ -211,7 +216,7 @@ int main(int argc, char **argv) {
 //can l change all float to float
 //do some minus optimization (change all exp to expf and fmin to fminf)
 //“Pragma”: stands for “pragmatic information.
-//A pragma is a way to communicate the information to the compiler. 
+//A pragma is a way to communicate the information to the compiler.
 
 /*can we parallel manually instesd of using #pragma omp parallel for schedule(dynamic) default(none) private(y) shared(a, x, b, pc, gv, ext, deta, i)*/
 //somethinglike
