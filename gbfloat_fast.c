@@ -58,7 +58,7 @@ float gd(float a, float b, float x) {
     return expf((-.5f) * c * c) / (a * sqrt(2 * PI));
 }
 
-inline size_t allocSize(int a) { return 1 << (32 - __builtin_clz(a)); }
+size_t allocSize(int a) { return 1 << (32 - __builtin_clz(a)); }
 
 FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_length) {
     FVec v;
@@ -69,9 +69,9 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     } else {
         v.min_deta = ((v.length - v.min_length) / 2);
     }
-//    v.data = malloc(length * sizeof(float));
+    //    v.data = malloc(length * sizeof(float));
     v.data = aligned_alloc(1024, allocSize(length * sizeof(float)));
-//    v.sum = malloc((length / 2 + 1) * sizeof(float));
+    //    v.sum = malloc((length / 2 + 1) * sizeof(float));
     v.sum = aligned_alloc(1024, allocSize((length / 2 + 1) * sizeof(float)));
     float step = (x1 - x0) / ((float) length);
     int offset = length / 2;
@@ -90,7 +90,7 @@ void print_fvec(FVec v) {
 
 Image img_sc(Image a) {
     Image b = a;
-//    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float));
+    //    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float));
     b.data = aligned_alloc(1024, b.dimX * b.dimY * b.numChannels * sizeof(float));
     return b;
 }
@@ -109,7 +109,25 @@ Image gb_h(Image a, FVec gv) {
             pc = get_pixel(b, x, y);
             deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
             float sum1 = 0, sum2 = 0, sum3 = 0;
-            for (i = deta; i < gv.length - deta; ++i) {
+            for (i = deta; i < gv.length - deta - 4; i += 4) {
+                sum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
+                sum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
+                sum3 += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
+
+                sum1 += gv.data[i + 1] * get_pixel(a, x - ext + i + 1, y)[0];
+                sum2 += gv.data[i + 1] * get_pixel(a, x - ext + i + 1, y)[1];
+                sum3 += gv.data[i + 1] * get_pixel(a, x - ext + i + 1, y)[2];
+
+                sum1 += gv.data[i + 2] * get_pixel(a, x - ext + i + 2, y)[0];
+                sum2 += gv.data[i + 2] * get_pixel(a, x - ext + i + 2, y)[1];
+                sum3 += gv.data[i + 2] * get_pixel(a, x - ext + i + 2, y)[2];
+
+                sum1 += gv.data[i + 3] * get_pixel(a, x - ext + i + 3, y)[0];
+                sum2 += gv.data[i + 3] * get_pixel(a, x - ext + i + 3, y)[1];
+                sum3 += gv.data[i + 3] * get_pixel(a, x - ext + i + 3, y)[2];
+            }
+
+            for (; i < gv.length - deta; ++i) {
                 sum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
                 sum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
                 sum3 += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
@@ -136,7 +154,28 @@ Image gb_v(Image a, FVec gv) {
             pc = get_pixel(b, x, y);
             deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
             float sum1 = 0, sum2 = 0, sum3 = 0;
-            for (i = deta; i < gv.length - deta; ++i) {
+            for (i = deta; i < gv.length - deta - 4; i += 4) {
+
+
+
+
+                sum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
+                sum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
+                sum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
+
+                sum1 += gv.data[i + 1] * get_pixel(a, x, y - ext + i + 1)[0];
+                sum2 += gv.data[i + 1] * get_pixel(a, x, y - ext + i + 1)[1];
+                sum3 += gv.data[i + 1] * get_pixel(a, x, y - ext + i + 1)[2];
+
+                sum1 += gv.data[i + 2] * get_pixel(a, x, y - ext + i + 2)[0];
+                sum2 += gv.data[i + 2] * get_pixel(a, x, y - ext + i + 2)[1];
+                sum3 += gv.data[i + 2] * get_pixel(a, x, y - ext + i + 2)[2];
+
+                sum1 += gv.data[i + 3] * get_pixel(a, x, y - ext + i + 3)[0];
+                sum2 += gv.data[i + 3] * get_pixel(a, x, y - ext + i + 3)[1];
+                sum3 += gv.data[i + 3] * get_pixel(a, x, y - ext + i + 3)[2];
+            }
+            for (; i < gv.length - deta; ++i) {
                 sum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
                 sum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
                 sum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
