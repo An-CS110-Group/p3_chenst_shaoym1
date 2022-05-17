@@ -69,10 +69,10 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     } else {
         v.min_deta = ((v.length - v.min_length) / 2);
     }
-    //    v.data = malloc(length * sizeof(float));
-    v.data = aligned_alloc(1024, allocSize(length * sizeof(float)));
-    //    v.sum = malloc((length / 2 + 1) * sizeof(float));
-    v.sum = aligned_alloc(1024, allocSize((length / 2 + 1) * sizeof(float)));
+    v.data = malloc(length * sizeof(float));
+    //    v.data = aligned_alloc(1024, allocSize(length * sizeof(float)));
+    v.sum = malloc((length / 2 + 1) * sizeof(float));
+    //    v.sum = aligned_alloc(1024, allocSize((length / 2 + 1) * sizeof(float)));
     float step = (x1 - x0) / ((float) length);
     int offset = length / 2;
 
@@ -90,21 +90,19 @@ void print_fvec(FVec v) {
 
 Image img_sc(Image a) {
     Image b = a;
-    //    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float));
-    b.data = aligned_alloc(1024, b.dimX * b.dimY * b.numChannels * sizeof(float));
+    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float));
+    //    b.data = aligned_alloc(1024, b.dimX * b.dimY * b.numChannels * sizeof(float));
     return b;
 }
 
 Image gb_h(Image a, FVec gv) {
     Image b = img_sc(a);
     int ext = gv.length / 2;
-    int x, y, deta, i;
-    float *pc;
 
-#pragma omp parallel for schedule(dynamic) default(none) private(y) shared(a, x, b, pc, gv, ext, deta, i)
-    for (y = 0; y < a.dimY; y++) {
-        for (x = 0; x < a.dimX; x++) {
-            deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
+#pragma omp parallel for schedule(dynamic) default(none) shared(a, b, gv, ext)
+    for (int y = 0; y < a.dimY; y++) {
+        for (int x = 0; x < a.dimX; x++) {
+            int deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
             float fsum1 = 0, fsum2 = 0, fsum3 = 0;
             __m128 pixel0, pixel1, pixel2, pixel3;
             __m128 gvData0, gvData1, gvData2, gvData3;
@@ -112,6 +110,7 @@ Image gb_h(Image a, FVec gv) {
             __m128 sum1 = _mm_setzero_ps();
             __m128 sum2 = _mm_setzero_ps();
             __m128 sum3 = _mm_setzero_ps();
+            int i;
             for (i = deta; i < gv.length - deta - 4; i += 4) {
                 pixel0 = _mm_loadu_ps(get_pixel(a, x - ext + i, y));
                 pixel1 = _mm_loadu_ps(get_pixel(a, x - ext + i + 1, y));
@@ -127,6 +126,11 @@ Image gb_h(Image a, FVec gv) {
                 sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
                 sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
                 sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
+
+                //                sum0 = _mm_add_ps(sum0, _mm_mul_ps(pixel0, gvData0));
+                //                sum1 = _mm_add_ps(sum1, _mm_mul_ps(pixel1, gvData1));
+                //                sum2 = _mm_add_ps(sum2, _mm_mul_ps(pixel2, gvData2));
+                //                sum3 = _mm_add_ps(sum3, _mm_mul_ps(pixel3, gvData3));
             }
 
             for (; i < gv.length - deta; ++i) {
@@ -145,15 +149,11 @@ Image gb_h(Image a, FVec gv) {
 Image gb_v(Image a, FVec gv) {
     Image b = img_sc(a);
     int ext = gv.length / 2;
-    int x, y, deta, i;
-    float *pc;
 
-
-#pragma omp parallel for schedule(dynamic) default(none) private(y) shared(a, x, b, pc, gv, ext, deta, i)
-    for (y = 0; y < a.dimY; y++) {
-        for (x = 0; x < a.dimX; x++) {
-            pc = get_pixel(b, x, y);
-            deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
+#pragma omp parallel for schedule(dynamic) default(none) shared(a, b, gv, ext)
+    for (int y = 0; y < a.dimY; y++) {
+        for (int x = 0; x < a.dimX; x++) {
+            int deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
             float fsum1 = 0, fsum2 = 0, fsum3 = 0;
             __m128 pixel0, pixel1, pixel2, pixel3;
             __m128 gvData0, gvData1, gvData2, gvData3;
@@ -161,6 +161,7 @@ Image gb_v(Image a, FVec gv) {
             __m128 sum1 = _mm_setzero_ps();
             __m128 sum2 = _mm_setzero_ps();
             __m128 sum3 = _mm_setzero_ps();
+            int i;
             for (i = deta; i < gv.length - deta - 4; i += 4) {
                 pixel0 = _mm_loadu_ps(get_pixel(a, x, y - ext + i));
                 pixel1 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 1));
@@ -183,9 +184,9 @@ Image gb_v(Image a, FVec gv) {
                 fsum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
                 fsum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
             }
-            pc[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + fsum1) / gv.sum[ext - deta];
-            pc[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + fsum2) / gv.sum[ext - deta];
-            pc[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + fsum3) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + fsum1) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + fsum2) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + fsum3) / gv.sum[ext - deta];
         }
     }
     return b;
