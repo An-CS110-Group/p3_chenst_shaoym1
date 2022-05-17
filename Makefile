@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -fopenmp -pthread -mavx -mavx2
+CFLAGS = -O2 -fopenmp -pthread -mavx -mavx2 -mfma
 LIBS = -lm
 all : base_test fast_test check_test
 
