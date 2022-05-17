@@ -112,25 +112,25 @@ Image gb_h(Image a, FVec gv) {
             __m128 sum3 = _mm_setzero_ps();
             int i;
             for (i = deta; i < gv.length - deta - 4; i += 4) {
-                pixel0 = _mm_loadu_ps(get_pixel(a, x - ext + i, y));
-                pixel1 = _mm_loadu_ps(get_pixel(a, x - ext + i + 1, y));
-                pixel2 = _mm_loadu_ps(get_pixel(a, x - ext + i + 2, y));
-                pixel3 = _mm_loadu_ps(get_pixel(a, x - ext + i + 3, y));
+                //                pixel0 = _mm_loadu_ps(get_pixel(a, x - ext + i, y));
+                //                pixel1 = _mm_loadu_ps(get_pixel(a, x - ext + i + 1, y));
+                //                pixel2 = _mm_loadu_ps(get_pixel(a, x - ext + i + 2, y));
+                //                pixel3 = _mm_loadu_ps(get_pixel(a, x - ext + i + 3, y));
+                //
+                //                gvData0 = _mm_load1_ps(&gv.data[i]);
+                //                gvData1 = _mm_load1_ps(&gv.data[i + 1]);
+                //                gvData2 = _mm_load1_ps(&gv.data[i + 2]);
+                //                gvData3 = _mm_load1_ps(&gv.data[i + 3]);
+                //
+                //                sum0 = _mm_fmadd_ps(pixel0, gvData0, sum0);
+                //                sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
+                //                sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
+                //                sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
 
-                gvData0 = _mm_load1_ps(&gv.data[i]);
-                gvData1 = _mm_load1_ps(&gv.data[i + 1]);
-                gvData2 = _mm_load1_ps(&gv.data[i + 2]);
-                gvData3 = _mm_load1_ps(&gv.data[i + 3]);
-
-                sum0 = _mm_fmadd_ps(pixel0, gvData0, sum0);
-                sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
-                sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
-                sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
-
-                //                sum0 = _mm_add_ps(sum0, _mm_mul_ps(pixel0, gvData0));
-                //                sum1 = _mm_add_ps(sum1, _mm_mul_ps(pixel1, gvData1));
-                //                sum2 = _mm_add_ps(sum2, _mm_mul_ps(pixel2, gvData2));
-                //                sum3 = _mm_add_ps(sum3, _mm_mul_ps(pixel3, gvData3));
+                sum0 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i, y)), _mm_load1_ps(&gv.data[i]), sum0);
+                sum1 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 1, y)), _mm_load1_ps(&gv.data[i + 1]), sum1);
+                sum2 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 2, y)), _mm_load1_ps(&gv.data[i + 2]), sum2);
+                sum3 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 3, y)), _mm_load1_ps(&gv.data[i + 3]), sum3);
             }
 
             for (; i < gv.length - deta; ++i) {
@@ -163,20 +163,25 @@ Image gb_v(Image a, FVec gv) {
             __m128 sum3 = _mm_setzero_ps();
             int i;
             for (i = deta; i < gv.length - deta - 4; i += 4) {
-                pixel0 = _mm_loadu_ps(get_pixel(a, x, y - ext + i));
-                pixel1 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 1));
-                pixel2 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 2));
-                pixel3 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 3));
+                //                pixel0 = _mm_loadu_ps(get_pixel(a, x, y - ext + i));
+                //                pixel1 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 1));
+                //                pixel2 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 2));
+                //                pixel3 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 3));
 
-                gvData0 = _mm_load1_ps(&gv.data[i]);
-                gvData1 = _mm_load1_ps(&gv.data[i + 1]);
-                gvData2 = _mm_load1_ps(&gv.data[i + 2]);
-                gvData3 = _mm_load1_ps(&gv.data[i + 3]);
+                //                gvData0 = _mm_load1_ps(&gv.data[i]);
+                //                gvData1 = _mm_load1_ps(&gv.data[i + 1]);
+                //                gvData2 = _mm_load1_ps(&gv.data[i + 2]);
+                //                gvData3 = _mm_load1_ps(&gv.data[i + 3]);
+                //
+                //                sum0 = _mm_fmadd_ps(pixel0, gvData0, sum0);
+                //                sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
+                //                sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
+                //                sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
 
-                sum0 = _mm_fmadd_ps(pixel0, gvData0, sum0);
-                sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
-                sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
-                sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
+                sum0 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i)), _mm_load1_ps(&gv.data[i]), sum0);
+                sum1 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 1)), _mm_load1_ps(&gv.data[i + 1]), sum1);
+                sum2 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 2)), _mm_load1_ps(&gv.data[i + 2]), sum2);
+                sum3 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x, y - ext + i + 3)), _mm_load1_ps(&gv.data[i + 3]), sum3);
             }
 
             for (; i < gv.length - deta; ++i) {
