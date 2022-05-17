@@ -3,6 +3,8 @@ gbfloat_fast
 test_accuracy
 test_base.jpg
 test_fast.jpg
+test_fast2.jpg
+test_fast3.jpg
 .clang-format
 
 ### VisualStudioCode template
