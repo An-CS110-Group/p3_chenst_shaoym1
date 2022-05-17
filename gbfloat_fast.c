@@ -101,30 +101,42 @@ Image gb_h(Image a, FVec gv) {
     int x, y, deta, i;
     float *pc;
 
-    omp_set_num_threads(4);
-
 #pragma omp parallel for schedule(dynamic) default(none) private(y) shared(a, x, b, pc, gv, ext, deta, i)
     for (y = 0; y < a.dimY; y++) {
         for (x = 0; x < a.dimX; x++) {
-            pc = get_pixel(b, x, y);
             deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
-            __m128 pixel = _mm_setzero_ps();
-            __m128 gvData = _mm_setzero_ps();
-            __m128 sum = _mm_setzero_ps();
-            for (i = deta; i < gv.length - deta; ++i) {
-                pixel = _mm_loadu_ps(get_pixel(a, x - ext + i, y));
-                gvData = _mm_load1_ps(&gv.data[i]);
-                sum = _mm_fmadd_ps(pixel, gvData, sum);
+            float fsum1 = 0, fsum2 = 0, fsum3 = 0;
+            __m128 pixel0, pixel1, pixel2, pixel3;
+            __m128 gvData0, gvData1, gvData2, gvData3;
+            __m128 sum0 = _mm_setzero_ps();
+            __m128 sum1 = _mm_setzero_ps();
+            __m128 sum2 = _mm_setzero_ps();
+            __m128 sum3 = _mm_setzero_ps();
+            for (i = deta; i < gv.length - deta - 4; i += 4) {
+                pixel0 = _mm_loadu_ps(get_pixel(a, x - ext + i, y));
+                pixel1 = _mm_loadu_ps(get_pixel(a, x - ext + i + 1, y));
+                pixel2 = _mm_loadu_ps(get_pixel(a, x - ext + i + 2, y));
+                pixel3 = _mm_loadu_ps(get_pixel(a, x - ext + i + 3, y));
+
+                gvData0 = _mm_load1_ps(&gv.data[i]);
+                gvData1 = _mm_load1_ps(&gv.data[i + 1]);
+                gvData2 = _mm_load1_ps(&gv.data[i + 2]);
+                gvData3 = _mm_load1_ps(&gv.data[i + 3]);
+
+                sum0 = _mm_fmadd_ps(pixel0, gvData0, sum0);
+                sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
+                sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
+                sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
             }
 
-            //            for (; i < gv.length - deta; ++i) {
-            //                sum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
-            //                sum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
-            //                sum3 += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
-            //            }
-            pc[0] = sum[0] / gv.sum[ext - deta];
-            pc[1] = sum[1] / gv.sum[ext - deta];
-            pc[2] = sum[2] / gv.sum[ext - deta];
+            for (; i < gv.length - deta; ++i) {
+                fsum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
+                fsum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
+                fsum3 += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
+            }
+            get_pixel(b, x, y)[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + fsum1) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + fsum2) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + fsum3) / gv.sum[ext - deta];
         }
     }
     return b;
@@ -136,29 +148,44 @@ Image gb_v(Image a, FVec gv) {
     int x, y, deta, i;
     float *pc;
 
-    omp_set_num_threads(4);
 
 #pragma omp parallel for schedule(dynamic) default(none) private(y) shared(a, x, b, pc, gv, ext, deta, i)
     for (y = 0; y < a.dimY; y++) {
         for (x = 0; x < a.dimX; x++) {
             pc = get_pixel(b, x, y);
             deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
-            __m128 pixel = _mm_setzero_ps();
-            __m128 gvData = _mm_setzero_ps();
-            __m128 sum = _mm_setzero_ps();
-            for (i = deta; i < gv.length - deta; ++i) {
-                pixel = _mm_loadu_ps(get_pixel(a, x, y - ext + i));
-                gvData = _mm_load1_ps(&gv.data[i]);
-                sum = _mm_fmadd_ps(pixel, gvData, sum);
+            float fsum1 = 0, fsum2 = 0, fsum3 = 0;
+            __m128 pixel0, pixel1, pixel2, pixel3;
+            __m128 gvData0, gvData1, gvData2, gvData3;
+            __m128 sum0 = _mm_setzero_ps();
+            __m128 sum1 = _mm_setzero_ps();
+            __m128 sum2 = _mm_setzero_ps();
+            __m128 sum3 = _mm_setzero_ps();
+            for (i = deta; i < gv.length - deta - 4; i += 4) {
+                pixel0 = _mm_loadu_ps(get_pixel(a, x, y - ext + i));
+                pixel1 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 1));
+                pixel2 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 2));
+                pixel3 = _mm_loadu_ps(get_pixel(a, x, y - ext + i + 3));
+
+                gvData0 = _mm_load1_ps(&gv.data[i]);
+                gvData1 = _mm_load1_ps(&gv.data[i + 1]);
+                gvData2 = _mm_load1_ps(&gv.data[i + 2]);
+                gvData3 = _mm_load1_ps(&gv.data[i + 3]);
+
+                sum0 = _mm_fmadd_ps(pixel0, gvData0, sum0);
+                sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
+                sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
+                sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
             }
-            //            for (; i < gv.length - deta; ++i) {
-            //                sum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
-            //                sum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
-            //                sum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
-            //            }
-            pc[0] = sum[0] / gv.sum[ext - deta];
-            pc[1] = sum[1] / gv.sum[ext - deta];
-            pc[2] = sum[2] / gv.sum[ext - deta];
+
+            for (; i < gv.length - deta; ++i) {
+                fsum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
+                fsum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
+                fsum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
+            }
+            pc[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + fsum1) / gv.sum[ext - deta];
+            pc[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + fsum2) / gv.sum[ext - deta];
+            pc[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + fsum3) / gv.sum[ext - deta];
         }
     }
     return b;
