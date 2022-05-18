@@ -1,7 +1,8 @@
-CC = gcc
+CC = gcc-9
 CFLAGS = -O2 -fopenmp -pthread -mavx -mavx2 -mfma
 LIBS = -lm
 all : base_test fast_test check_test
+#all : fast_test check_test
 
 clean:
 	@-rm -f *.o gbfloat_base
