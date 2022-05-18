@@ -100,24 +100,18 @@ Image gb_h(Image a, FVec gv) {
         for (int x = 0; x < a.dimX; x++) {
             int deta = (int) MIN(MIN(MIN(a.dimY - y - 1, y), MIN(a.dimX - x - 1, x)), (float) gv.min_deta);
             float fsum1 = 0, fsum2 = 0, fsum3 = 0;
-            __m128 sum0 = _mm_setzero_ps();
-            __m128 sum1 = _mm_setzero_ps();
-            __m128 sum2 = _mm_setzero_ps();
-            __m128 sum3 = _mm_setzero_ps();
-            __m128 sum4 = _mm_setzero_ps();
-            __m128 sum5 = _mm_setzero_ps();
-            __m128 sum6 = _mm_setzero_ps();
-            __m128 sum7 = _mm_setzero_ps();
+            __m128 sum[8] = {_mm_setzero_ps(), _mm_setzero_ps(), _mm_setzero_ps(), _mm_setzero_ps(),
+                             _mm_setzero_ps(), _mm_setzero_ps(), _mm_setzero_ps(), _mm_setzero_ps()};
             int i;
             for (i = deta; i < gv.length - deta - 8; i += 8) {
-                sum0 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i, y)), _mm_load1_ps(&gv.data[i]), sum0);
-                sum1 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 1, y)), _mm_load1_ps(&gv.data[i + 1]), sum1);
-                sum2 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 2, y)), _mm_load1_ps(&gv.data[i + 2]), sum2);
-                sum3 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 3, y)), _mm_load1_ps(&gv.data[i + 3]), sum3);
-                sum4 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 4, y)), _mm_load1_ps(&gv.data[i + 4]), sum4);
-                sum5 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 5, y)), _mm_load1_ps(&gv.data[i + 5]), sum5);
-                sum6 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 6, y)), _mm_load1_ps(&gv.data[i + 6]), sum6);
-                sum7 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 7, y)), _mm_load1_ps(&gv.data[i + 7]), sum7);
+                sum[0] = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i, y)), _mm_load1_ps(&gv.data[i]), sum[0]);
+                sum[1] = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 1, y)), _mm_load1_ps(&gv.data[i + 1]), sum[1]);
+                sum[2] = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 2, y)), _mm_load1_ps(&gv.data[i + 2]), sum[2]);
+                sum[3] = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 3, y)), _mm_load1_ps(&gv.data[i + 3]), sum[3]);
+                sum[4] = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 4, y)), _mm_load1_ps(&gv.data[i + 4]), sum[4]);
+                sum[5] = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 5, y)), _mm_load1_ps(&gv.data[i + 5]), sum[5]);
+                sum[6] = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 6, y)), _mm_load1_ps(&gv.data[i + 6]), sum[6]);
+                sum[7] = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 7, y)), _mm_load1_ps(&gv.data[i + 7]), sum[7]);
             }
 
             for (; i < gv.length - deta; ++i) {
@@ -125,9 +119,9 @@ Image gb_h(Image a, FVec gv) {
                 fsum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
                 fsum3 += gv.data[i] * get_pixel(a, x - ext + i, y)[2];
             }
-            get_pixel(b, x, y)[0] = (sum0[0] + sum1[0] + sum2[0] + sum3[0] + sum4[0] + sum5[0] + sum6[0] + sum7[0] + fsum1) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[1] = (sum0[1] + sum1[1] + sum2[1] + sum3[1] + sum4[1] + sum5[1] + sum6[1] + sum7[1] + fsum2) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[2] = (sum0[2] + sum1[2] + sum2[2] + sum3[2] + sum4[2] + sum5[2] + sum6[2] + sum7[2] + fsum3) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[0] = (sum[0][0] + sum[1][0] + sum[2][0] + sum[3][0] + sum[4][0] + sum[5][0] + sum[6][0] + sum[7][0] + fsum1) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[1] = (sum[0][1] + sum[1][1] + sum[2][1] + sum[3][1] + sum[4][1] + sum[5][1] + sum[6][1] + sum[7][1] + fsum2) / gv.sum[ext - deta];
+            get_pixel(b, x, y)[2] = (sum[0][2] + sum[1][2] + sum[2][2] + sum[3][2] + sum[4][2] + sum[5][2] + sum[6][2] + sum[7][2] + fsum3) / gv.sum[ext - deta];
         }
     }
     return b;
