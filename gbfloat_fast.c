@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <immintrin.h>
 #include <math.h>
 #include <omp.h>
@@ -96,13 +97,27 @@ Image gb_h(Image a, FVec gv) {
     int ext = gv.length / 2;
 
     float gvData[3 * gv.length + 10];
+    #pragma omp parallel for schedule(dynamic) default(shared)
     for (int i = 0; i < gv.length; ++i) {
         gvData[3 * i + 0] = gv.data[i];
         gvData[3 * i + 1] = gv.data[i];
         gvData[3 * i + 2] = gv.data[i];
     }
 
-    #pragma omp parallel for schedule(dynamic) default(none) shared(a, b, gv, ext, gvData)
+    //    float *pixels = malloc((3 * a.dimX * a.dimY + 3 * a.dimX + 3 * gv.length) * sizeof(float));// Not to add extra space here in order to debug
+    float *pixels = malloc(3 * (a.dimX + 2 * ext + 1) * a.dimY * sizeof(float));
+
+    #pragma omp parallel for schedule(dynamic) default(shared)
+    for (int j = 0; j < a.dimY; ++j) {
+        for (int i = -ext; i < a.dimX + ext; ++i) {
+            pixels[3 * i + 3 * ext + 3 * j * (a.dimX + 2 * ext + 1) + 0] = get_pixel(a, i, j)[0];
+            pixels[3 * i + 3 * ext + 3 * j * (a.dimX + 2 * ext + 1) + 1] = get_pixel(a, i, j)[1];
+            pixels[3 * i + 3 * ext + 3 * j * (a.dimX + 2 * ext + 1) + 2] = get_pixel(a, i, j)[2];
+        }
+    }
+
+    //    #pragma omp parallel for schedule(dynamic) default(none) shared(a, b, gv, ext, gvData)
+    #pragma omp parallel for schedule(dynamic) default(shared)
     for (int y = 0; y < a.dimY; y++) {
         for (int x = 0; x < a.dimX; x++) {
             int deta = MIN(MIN(MIN(a.dimY - y - 1, y), MIN(a.dimX - x - 1, x)), gv.min_deta);
@@ -110,16 +125,27 @@ Image gb_h(Image a, FVec gv) {
             __m256 sum[3] = {_mm256_setzero_ps(), _mm256_setzero_ps(), _mm256_setzero_ps()};
             int i;
             for (i = deta; i < gv.length - deta - 8; i += 8) {
-                float *place[8] = {get_pixel(a, x - ext + i + 0, y), get_pixel(a, x - ext + i + 1, y), get_pixel(a, x - ext + i + 2, y),
-                                   get_pixel(a, x - ext + i + 3, y), get_pixel(a, x - ext + i + 4, y), get_pixel(a, x - ext + i + 5, y),
-                                   get_pixel(a, x - ext + i + 6, y), get_pixel(a, x - ext + i + 7, y)};
-                __attribute__((aligned(256))) float pixel[24] = {place[0][0], place[0][1], place[0][2], place[1][0], place[1][1], place[1][2],
-                                                                 place[2][0], place[2][1], place[2][2], place[3][0], place[3][1], place[3][2],
-                                                                 place[4][0], place[4][1], place[4][2], place[5][0], place[5][1], place[5][2],
-                                                                 place[6][0], place[6][1], place[6][2], place[7][0], place[7][1], place[7][2]};
-                sum[0] = _mm256_fmadd_ps(_mm256_loadu_ps(pixel + 0), _mm256_loadu_ps(&gvData[3 * i + 0]), sum[0]);
-                sum[1] = _mm256_fmadd_ps(_mm256_loadu_ps(pixel + 8), _mm256_loadu_ps(&gvData[3 * i + 8]), sum[1]);
-                sum[2] = _mm256_fmadd_ps(_mm256_loadu_ps(pixel + 16), _mm256_loadu_ps(&gvData[3 * i + 16]), sum[2]);
+                sum[0] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 0) + 0 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_loadu_ps(&gvData[3 * i + 0]),
+                                         sum[0]);
+                sum[1] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 2) + 2 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_loadu_ps(&gvData[3 * i + 8]),
+                                         sum[1]);
+                sum[2] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 5) + 1 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_loadu_ps(&gvData[3 * i + 16]),
+                                         sum[2]);
+
+                //                float *place[8] = {get_pixel(a, x - ext + i + 0, y), get_pixel(a, x - ext + i + 1, y), get_pixel(a, x - ext + i + 2, y),
+                //                                   get_pixel(a, x - ext + i + 3, y), get_pixel(a, x - ext + i + 4, y), get_pixel(a, x - ext + i + 5, y),
+                //                                   get_pixel(a, x - ext + i + 6, y), get_pixel(a, x - ext + i + 7, y)};
+                //                __attribute__((aligned(256))) float pixel[24] = {place[0][0], place[0][1], place[0][2], place[1][0], place[1][1], place[1][2],
+                //                                                                 place[2][0], place[2][1], place[2][2], place[3][0], place[3][1], place[3][2],
+                //                                                                 place[4][0], place[4][1], place[4][2], place[5][0], place[5][1], place[5][2],
+                //                                                                 place[6][0], place[6][1], place[6][2], place[7][0], place[7][1], place[7][2]};
+                //                sum[0] = _mm256_fmadd_ps(_mm256_loadu_ps(pixel + 0), _mm256_loadu_ps(&gvData[3 * i + 0]), sum[0]);
+                //                sum[1] = _mm256_fmadd_ps(_mm256_loadu_ps(pixel + 8), _mm256_loadu_ps(&gvData[3 * i + 8]), sum[1]);
+                //                sum[2] = _mm256_fmadd_ps(_mm256_loadu_ps(pixel + 16), _mm256_loadu_ps(&gvData[3 * i + 16]), sum[2]);
+                //
+                //                assert(*(&pixels[3 * (x + i + 0) + 0 + 3 * y * (a.dimX + 2 * ext + 1)]) == (pixel[0]));
+                //                assert(*(&pixels[3 * (x + i + 2) + 2 + 3 * y * (a.dimX + 2 * ext + 1)]) == (pixel[8]));
+                //                assert(*(&pixels[3 * (x + i + 5) + 1 + 3 * y * (a.dimX + 2 * ext + 1)]) == (pixel[16]));
             }
 
             for (; i < gv.length - deta; ++i) {
