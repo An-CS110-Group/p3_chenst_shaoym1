@@ -122,6 +122,7 @@ Image gb_h(Image a, FVec gv, float *gvData) {
             get_pixel(b, x, y)[2] = (sum[0][2] + sum[0][5] + sum[1][0] + sum[1][3] + sum[1][6] + sum[2][1] + sum[2][4] + sum[2][7] + fsum3) / gv.sum[ext - deta];
         }
     }
+    free(pixels);
     return b;
 }
 
