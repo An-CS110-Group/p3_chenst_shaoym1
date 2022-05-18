@@ -78,9 +78,9 @@ void transpose_block(Image *src, Image *dst) {
 #pragma omp parallel for schedule(dynamic) default(none) shared(src, dst)
     for (int i = 0; i < src->dimX; ++i) {
         for (int j = 0; j < src->dimY; ++j) {
-            dst->data[(src->dimX * j + i) * src->numChannels + 0] = src->data[(src->dimY * i + j) * src->numChannels + 0];
-            dst->data[(src->dimX * j + i) * src->numChannels + 1] = src->data[(src->dimY * i + j) * src->numChannels + 1];
-            dst->data[(src->dimX * j + i) * src->numChannels + 2] = src->data[(src->dimY * i + j) * src->numChannels + 2];
+            dst->data[(dst->dimX * i + j) * dst->numChannels + 0] = src->data[(src->dimX * j + i) * src->numChannels + 0];
+            dst->data[(dst->dimX * i + j) * dst->numChannels + 1] = src->data[(src->dimX * j + i) * src->numChannels + 1];
+            dst->data[(dst->dimX * i + j) * dst->numChannels + 2] = src->data[(src->dimX * j + i) * src->numChannels + 2];
         }
     }
 }
