@@ -20,15 +20,15 @@
 
 
 typedef struct FVec {
-    unsigned int length;
-    unsigned int min_length;
-    unsigned int min_deta;
+    int length;
+    int min_length;
+    int min_deta;
     float *data;
     float *sum;
 } FVec;
 
 typedef struct Image {
-    unsigned int dimX, dimY, numChannels;
+    int dimX, dimY, numChannels;
     float *data;
 } Image;
 
@@ -82,6 +82,17 @@ void print_fvec(FVec v) {
     printf("\n");
     for (i = 0; i < v.length; i++) { printf("%f ", v.data[i]); }
     printf("\n");
+}
+
+void transpose_block(float *src, const float *dst, int width, int height, int channel) {
+
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            src[(height * j + i) * channel + 0] = dst[(width * i + j) * channel + 0];
+            src[(height * j + i) * channel + 1] = dst[(width * i + j) * channel + 1];
+            src[(height * j + i) * channel + 2] = dst[(width * i + j) * channel + 2];
+        }
+    }
 }
 
 Image img_sc(Image a) {
@@ -278,7 +289,8 @@ int main(int argc, char **argv) {
 //
 // FIXME: gb_v is SUPER slow! Much slower than expected due to cache miss issues.
 //
-// TODO: transpose matrix in gb_v
+// DONE: transpose matrix in gb_v
+//      TODO: Speedup transpose
 // TODO: change sequence of loop in gb_v
 // TODO: try __mm256, it shall be fast on Autolab.
-// TODO: test with a 4999x4999 pic
+// DONE: test with a 4999x4999 pic
