@@ -1,13 +1,11 @@
+#include <immintrin.h>
 #include <math.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
-// #include <algorithm>
-#include <immintrin.h>
-#include <omp.h>
 #include <sys/time.h>
 #include <time.h>
 #include <xmmintrin.h>
-//implement dynamic
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -17,6 +15,8 @@
 #include "stb_image_write.h"
 
 #define PI 3.14159
+
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 
 typedef struct FVec {
@@ -33,16 +33,10 @@ typedef struct Image {
 } Image;
 
 void normalize_FVec(FVec v) {
-    // float sum = 0.0;
     unsigned int i, j;
     int ext = v.length / 2;
     v.sum[0] = v.data[ext];
     for (i = ext + 1, j = 1; i < v.length; i++, j++) { v.sum[j] = v.sum[j - 1] + v.data[i] * 2; }
-    // for (i = 0; i <= ext; i++)
-    // {
-    //      v.data[i] /= v.sum[v.length - ext - 1 ] ;
-    //      printf("%lf ",v.sum[i]);
-    // }
 }
 
 float *get_pixel(Image img, int x, int y) {
@@ -55,10 +49,10 @@ float *get_pixel(Image img, int x, int y) {
 
 float gd(float a, float b, float x) {
     float c = (x - b) / a;
-    return expf((-.5f) * c * c) / (a * sqrt(2 * PI));
+    return (float) (expf((-.5f) * c * c) / (a * sqrt(2 * PI)));
 }
 
-FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_length) {
+FVec make_gv(float a, float x0, float x1, int length, int min_length) {
     FVec v;
     v.length = length;
     v.min_length = min_length;
@@ -72,25 +66,21 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     float step = (x1 - x0) / ((float) length);
     int offset = length / 2;
 
-    for (int i = 0; i < length; i++) { v.data[i] = gd(a, 0.0f, (i - offset) * step); }
+    for (int i = 0; i < length; i++) { v.data[i] = gd(a, 0.0f, (float) (i - offset) * step); }
     normalize_FVec(v);
     return v;
 }
 
-void print_fvec(FVec v) {
-    unsigned int i;
-    printf("\n");
-    for (i = 0; i < v.length; i++) { printf("%f ", v.data[i]); }
-    printf("\n");
-}
-
-void transpose_block(float *src, const float *dst, int width, int height, int channel) {
-
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            src[(height * j + i) * channel + 0] = dst[(width * i + j) * channel + 0];
-            src[(height * j + i) * channel + 1] = dst[(width * i + j) * channel + 1];
-            src[(height * j + i) * channel + 2] = dst[(width * i + j) * channel + 2];
+void transpose_block(Image *src, Image *dst) {
+    dst->dimX = src->dimY;
+    dst->dimY = src->dimX;
+    dst->numChannels = src->numChannels;
+#pragma omp parallel for schedule(dynamic) default(none) shared(src, dst)
+    for (int i = 0; i < src->dimX; ++i) {
+        for (int j = 0; j < src->dimY; ++j) {
+            dst->data[(src->dimX * j + i) * src->numChannels + 0] = src->data[(src->dimY * i + j) * src->numChannels + 0];
+            dst->data[(src->dimX * j + i) * src->numChannels + 1] = src->data[(src->dimY * i + j) * src->numChannels + 1];
+            dst->data[(src->dimX * j + i) * src->numChannels + 2] = src->data[(src->dimY * i + j) * src->numChannels + 2];
         }
     }
 }
@@ -108,10 +98,8 @@ Image gb_h(Image a, FVec gv) {
 #pragma omp parallel for schedule(dynamic) default(none) shared(a, b, gv, ext)
     for (int y = 0; y < a.dimY; y++) {
         for (int x = 0; x < a.dimX; x++) {
-            int deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
+            int deta = (int) MIN(MIN(MIN(a.dimY - y - 1, y), MIN(a.dimX - x - 1, x)), (float) gv.min_deta);
             float fsum1 = 0, fsum2 = 0, fsum3 = 0;
-            __m128 pixel0, pixel1, pixel2, pixel3;
-            __m128 gvData0, gvData1, gvData2, gvData3;
             __m128 sum0 = _mm_setzero_ps();
             __m128 sum1 = _mm_setzero_ps();
             __m128 sum2 = _mm_setzero_ps();
@@ -122,21 +110,6 @@ Image gb_h(Image a, FVec gv) {
             __m128 sum7 = _mm_setzero_ps();
             int i;
             for (i = deta; i < gv.length - deta - 8; i += 8) {
-                //                pixel0 = _mm_loadu_ps(get_pixel(a, x - ext + i, y));
-                //                pixel1 = _mm_loadu_ps(get_pixel(a, x - ext + i + 1, y));
-                //                pixel2 = _mm_loadu_ps(get_pixel(a, x - ext + i + 2, y));
-                //                pixel3 = _mm_loadu_ps(get_pixel(a, x - ext + i + 3, y));
-                //
-                //                gvData0 = _mm_load1_ps(&gv.data[i]);
-                //                gvData1 = _mm_load1_ps(&gv.data[i + 1]);
-                //                gvData2 = _mm_load1_ps(&gv.data[i + 2]);
-                //                gvData3 = _mm_load1_ps(&gv.data[i + 3]);
-                //
-                //                sum0 = _mm_fmadd_ps(pixel0, gvData0, sum0);
-                //                sum1 = _mm_fmadd_ps(pixel1, gvData1, sum1);
-                //                sum2 = _mm_fmadd_ps(pixel2, gvData2, sum2);
-                //                sum3 = _mm_fmadd_ps(pixel3, gvData3, sum3);
-
                 sum0 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i, y)), _mm_load1_ps(&gv.data[i]), sum0);
                 sum1 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 1, y)), _mm_load1_ps(&gv.data[i + 1]), sum1);
                 sum2 = _mm_fmadd_ps(_mm_loadu_ps(get_pixel(a, x - ext + i + 2, y)), _mm_load1_ps(&gv.data[i + 2]), sum2);
@@ -160,32 +133,12 @@ Image gb_h(Image a, FVec gv) {
     return b;
 }
 
-Image gb_v(Image a, FVec gv) {
-    Image b = img_sc(a);
-    int ext = gv.length / 2;
-
-#pragma omp parallel for schedule(dynamic) default(none) shared(a, b, gv, ext)
-    for (int y = 0; y < a.dimY; y++) {
-        for (int x = 0; x < a.dimX; x++) {
-            int deta = fminf(fminf(fminf(a.dimY - y - 1, y), fminf(a.dimX - x - 1, x)), gv.min_deta);
-            float fsum1 = 0, fsum2 = 0, fsum3 = 0;
-            int i;
-            for (i = deta; i < gv.length - deta; ++i) {
-                fsum1 += gv.data[i] * get_pixel(a, x, y - ext + i)[0];
-                fsum2 += gv.data[i] * get_pixel(a, x, y - ext + i)[1];
-                fsum3 += gv.data[i] * get_pixel(a, x, y - ext + i)[2];
-            }
-            get_pixel(b, x, y)[0] = (fsum1) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[1] = (fsum2) / gv.sum[ext - deta];
-            get_pixel(b, x, y)[2] = (fsum3) / gv.sum[ext - deta];
-        }
-    }
-    return b;
-}
-
 Image apply_gb(Image a, FVec gv) {
     Image b = gb_h(a, gv);
-    Image c = gb_v(b, gv);
+    transpose_block(&b, &a);
+    b = gb_h(a, gv);
+    Image c = img_sc(a);
+    transpose_block(&b, &c);
     free(b.data);
     free(a.data);
     return c;
@@ -200,13 +153,13 @@ int main(int argc, char **argv) {
     }
 
     float a, x0, x1;
-    unsigned int dim, min_dim;
+    int dim, min_dim;
 
     sscanf(argv[3], "%f", &a);       /* 0.6 */
     sscanf(argv[4], "%f", &x0);      /* -2.0 */
     sscanf(argv[5], "%f", &x1);      /* 2.0 */
-    sscanf(argv[6], "%u", &dim);     /* 1001 */
-    sscanf(argv[7], "%u", &min_dim); /* 201 */
+    sscanf(argv[6], "%d", &dim);     /* 1001 */
+    sscanf(argv[7], "%d", &min_dim); /* 201 */
 
     FVec v = make_gv(a, x0, x1, dim, min_dim);
 
@@ -218,7 +171,7 @@ int main(int argc, char **argv) {
     stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
     gettimeofday(&stop_time, NULL);
     timersub(&stop_time, &start_time, &elapsed_time);
-    printf("%f \n", elapsed_time.tv_sec + elapsed_time.tv_usec / 1000000.0);
+    printf("%f \n", (double) elapsed_time.tv_sec + (double) elapsed_time.tv_usec / 1000000.0);
     free(imgOut.data);
     free(v.data);
     free(v.sum);
@@ -290,7 +243,8 @@ int main(int argc, char **argv) {
 // FIXME: gb_v is SUPER slow! Much slower than expected due to cache miss issues.
 //
 // DONE: transpose matrix in gb_v
-//      TODO: Speedup transpose
+//      ABORT: Speedup transpose
+//          Comment: No need to speedup, it takes a very small portion of program.
 // TODO: change sequence of loop in gb_v
 // TODO: try __mm256, it shall be fast on Autolab.
 // DONE: test with a 4999x4999 pic
