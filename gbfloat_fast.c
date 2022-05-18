@@ -281,3 +281,4 @@ int main(int argc, char **argv) {
 // TODO: transpose matrix in gb_v
 // TODO: change sequence of loop in gb_v
 // TODO: try __mm256, it shall be fast on Autolab.
+// TODO: test with a 4999x4999 pic
