@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv) {
     printf("%d %d", get_nprocs_conf(), get_nprocs());
-    assert(get_nprocs_conf() == 14);
+    assert(get_nprocs_conf() <= 4);
     assert(get_nprocs() == 14);
 
 
