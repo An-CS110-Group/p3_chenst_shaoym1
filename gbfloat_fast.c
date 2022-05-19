@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 int main(int argc, char **argv) {
-    assert(sysconf(_SC_NPROCESSORS_ONLN) == 28);
-    assert(sysconf(_SC_NPROCESSORS_ONLN) == 20);
+    assert(sysconf(_SC_NPROCESSORS_CONF) == 14);
+    assert(sysconf(_SC_NPROCESSORS_CONF) == 10);
     return 0;
 }
