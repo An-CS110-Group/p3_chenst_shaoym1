@@ -75,7 +75,7 @@ void transpose_block(Image *src, Image *dst) {
     dst->dimX = src->dimY;
     dst->dimY = src->dimX;
     dst->numChannels = src->numChannels;
-#pragma omp parallel for schedule(dynamic) default(none) shared(src, dst)
+#pragma omp parallel for schedule(nonmonotonic:static) default(none) shared(src, dst)
     for (int i = 0; i < src->dimX; ++i) {
         for (int j = 0; j < src->dimY; ++j) {
             dst->data[(dst->dimX * i + j) * dst->numChannels + 0] = src->data[(src->dimX * j + i) * src->numChannels + 0];
@@ -97,7 +97,7 @@ Image gb_h(Image a, FVec gv, float *gvData) {
 
     float *pixels = malloc(3 * (a.dimX + 2 * ext + 1) * a.dimY * sizeof(float));
 
-#pragma omp parallel for schedule(dynamic) default(none) shared(a, ext, pixels)
+#pragma omp parallel for schedule(nonmonotonic:static) default(none) shared(a, ext, pixels)
     for (int j = 0; j < a.dimY; ++j) {
         for (int i = -ext; i < a.dimX + ext; ++i) {
             pixels[3 * i + 3 * ext + 3 * j * (a.dimX + 2 * ext + 1) + 0] = get_pixel(a, i, j)[0];
@@ -106,7 +106,7 @@ Image gb_h(Image a, FVec gv, float *gvData) {
         }
     }
 
-#pragma omp parallel for schedule(dynamic) default(none) shared(a, b, gv, ext, gvData, pixels)
+#pragma omp parallel for schedule(nonmonotonic:dynamic) default(none) shared(a, b, gv, ext, gvData, pixels)
     for (int y = 0; y < a.dimY; y++) {
         for (int x = 0; x < a.dimX; x++) {
             int deta = MIN(MIN(MIN(a.dimY - y - 1, y), MIN(a.dimX - x - 1, x)), gv.min_deta);
@@ -134,7 +134,7 @@ Image gb_h(Image a, FVec gv, float *gvData) {
 
 Image apply_gb(Image a, FVec gv) {
     __attribute__((aligned(64))) float gvData[3 * gv.length + 10];
-#pragma omp parallel for schedule(dynamic) default(none) shared(gv, gvData)
+#pragma omp parallel for schedule(nonmonotonic:static) default(none) shared(gv, gvData)
     for (int i = 0; i < gv.length; ++i) {
         gvData[3 * i + 0] = gv.data[i];
         gvData[3 * i + 1] = gv.data[i];
