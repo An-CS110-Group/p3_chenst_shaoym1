@@ -110,15 +110,14 @@ Image gb_h(Image a, FVec gv, float *gvData) {
     for (int y = 0; y < a.dimY; y++) {
         for (int x = 0; x < a.dimX; x++) {
             int deta = MIN(MIN(MIN(a.dimY - y - 1, y), MIN(a.dimX - x - 1, x)), gv.min_deta);
-            float fsum1 = 0, fsum2 = 0, fsum3 = 0;
             __m256 sum[3] = {_mm256_setzero_ps(), _mm256_setzero_ps(), _mm256_setzero_ps()};
             int i;
             for (i = deta; i < gv.length - deta - 8; i += 8) {
-                sum[0] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 0) + 0 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_loadu_ps(&gvData[3 * i + 0]), sum[0]);
-                sum[1] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 2) + 2 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_loadu_ps(&gvData[3 * i + 8]), sum[1]);
-                sum[2] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 5) + 1 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_loadu_ps(&gvData[3 * i + 16]), sum[2]);
+                sum[0] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 0) + 0 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_load_ps(&gvData[3 * i + 0]), sum[0]);
+                sum[1] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 2) + 2 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_load_ps(&gvData[3 * i + 8]), sum[1]);
+                sum[2] = _mm256_fmadd_ps(_mm256_loadu_ps(&pixels[3 * (x + i + 5) + 1 + 3 * y * (a.dimX + 2 * ext + 1)]), _mm256_load_ps(&gvData[3 * i + 16]), sum[2]);
             }
-
+            float fsum1 = 0, fsum2 = 0, fsum3 = 0;
             for (; i < gv.length - deta; ++i) {
                 fsum1 += gv.data[i] * get_pixel(a, x - ext + i, y)[0];
                 fsum2 += gv.data[i] * get_pixel(a, x - ext + i, y)[1];
@@ -134,7 +133,7 @@ Image gb_h(Image a, FVec gv, float *gvData) {
 }
 
 Image apply_gb(Image a, FVec gv) {
-    float gvData[3 * gv.length + 10];
+    __attribute__((aligned(64))) float gvData[3 * gv.length + 10];
 #pragma omp parallel for schedule(dynamic) default(none) shared(gv, gvData)
     for (int i = 0; i < gv.length; ++i) {
         gvData[3 * i + 0] = gv.data[i];
