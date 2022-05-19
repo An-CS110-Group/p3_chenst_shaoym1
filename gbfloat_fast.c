@@ -17,7 +17,6 @@
 #define PI 3.14159
 
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 
 typedef struct FVec {
@@ -41,8 +40,10 @@ void normalize_FVec(FVec v) {
 }
 
 float *get_pixel(Image img, int x, int y) {
-    x = MIN(img.dimX - 1, MAX(x, 0));
-    y = MIN(img.dimY - 1, MAX(y, 0));
+    if (x < 0) { x = 0; }
+    if (x >= img.dimX) { x = img.dimX - 1; }
+    if (y < 0) { y = 0; }
+    if (y >= img.dimY) { y = img.dimY - 1; }
     return img.data + img.numChannels * (y * img.dimX + x);
 }
 
@@ -55,11 +56,16 @@ FVec make_gv(float a, float x0, float x1, int length, int min_length) {
     FVec v;
     v.length = length;
     v.min_length = min_length;
-    v.min_deta = v.min_length > v.length ? 0 : (v.length - v.min_length) / 2;
+    if (v.min_length > v.length) {
+        v.min_deta = 0;
+    } else {
+        v.min_deta = ((v.length - v.min_length) / 2);
+    }
     v.data = malloc(length * sizeof(float) + sizeof(float));
     v.sum = malloc((length / 2 + 1) * sizeof(float) + sizeof(float));
     float step = (x1 - x0) / ((float) length);
     int offset = length / 2;
+
     for (int i = 0; i < length; i++) { v.data[i] = gd(a, 0.0f, (float) (i - offset) * step); }
     normalize_FVec(v);
     return v;
@@ -81,7 +87,7 @@ void transpose_block(Image *src, Image *dst) {
 
 Image img_sc(Image a) {
     Image b = a;
-    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float) + 10 * sizeof(float));
+    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float) + sizeof(float));
     return b;
 }
 
@@ -90,7 +96,8 @@ Image gb_h(Image a, FVec gv, float *gvData) {
     int ext = gv.length / 2;
 
     float *pixels = malloc(3 * (a.dimX + 2 * ext + 1) * a.dimY * sizeof(float));
-#pragma omp parallel for schedule(dynamic) default(none) shared(a, pixels, ext)
+
+#pragma omp parallel for schedule(dynamic) default(none) shared(a, ext, pixels)
     for (int j = 0; j < a.dimY; ++j) {
         for (int i = -ext; i < a.dimX + ext; ++i) {
             pixels[3 * i + 3 * ext + 3 * j * (a.dimX + 2 * ext + 1) + 0] = get_pixel(a, i, j)[0];
@@ -163,6 +170,7 @@ int main(int argc, char **argv) {
 
     FVec v = make_gv(a, x0, x1, dim, min_dim);
 
+    //    print_fvec(v);
     Image img;
     img.data = stbi_loadf(argv[1], &(img.dimX), &(img.dimY), &(img.numChannels), 0);
 
